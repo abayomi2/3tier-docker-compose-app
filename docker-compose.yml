@@ -1,0 +1,46 @@
+version: '3.9'
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "3000:3000"  # Expose the frontend to the host
+    env_file:
+      - ./frontend/.env
+    depends_on:
+      - backend  # Ensure the backend is up before the frontend
+    networks:
+      - ecommerce-network
+
+  backend:
+    build:
+      context: ./backend
+    ports:
+      - "5000:5000"  # Expose the backend to the host
+    environment:
+      DB_HOST: database  # Reference the database service
+      DB_USER: root
+      DB_PASSWORD: example
+    depends_on:
+      - database  # Ensure the database is up before the backend
+    networks:
+      - ecommerce-network
+
+  database:
+    image: mysql:5.7
+    environment:
+      MYSQL_ROOT_PASSWORD: example
+      MYSQL_DATABASE: ecommerce_db
+    volumes:
+      - db-data:/var/lib/mysql
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - ecommerce-network
+
+volumes:
+  db-data:  # Named volume for database persistence
+
+networks:
+  ecommerce-network:  # Custom network for communication
+    driver: bridge
